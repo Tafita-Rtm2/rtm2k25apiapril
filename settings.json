@@ -1,9 +1,9 @@
 {
   "name": "Rtm API",
   "version": "Tafitaniaina",
-  "description": "Simple and Easy-to-Use API Documentation",
+  "description": "Documentation API simple et facile à utiliser 📚",
   "header": {
-    "status": "Online!",
+    "status": "En ligne ✅",
     "imageSrc": [
       "https://cdnb.artstation.com/p/assets/images/images/066/149/065/original/killer-rabbit-media-chinese-alleyway-export.gif?1692171513"
     ],
@@ -18,22 +18,22 @@
   },
   "links": [
     {
-      "name": "Source Code",
+      "name": "Code source 💻",
       "url": "cantacter moi pour l'obtenire"
     },
     {
-      "name": "Contact Me",
-      "url": "https://t.me/ajirodesu"
+      "name": "Me contacter ✉️",
+      "url": "https://www.facebook.com/manarintso.niaina"
     }
   ],
   "notifications": [
     {
-      "title": "Welcome to API Dashboard",
-      "message": "Explore our APIs and integrate them into your projects."
+      "title": "Bienvenue sur le tableau de bord de l'API 🎉",
+      "message": "Explorez nos API et intégrez-les à vos projets facilement 🚀"
     },
     {
-      "title": "New Feature",
-      "message": "We've added support for WebSocket APIs. Check them out!"
+      "title": "Nouvelle fonctionnalité ✨",
+      "message": "Nous avons ajouté la prise en charge des API WebSocket. Allez jeter un œil ! 🔌"
     }
   ]
 }
