@@ -4,52 +4,54 @@ module.exports = {
   meta: {
     name: "YouTube Mp4 Downloader",
     version: "1.0.0",
-    author: "TonNom",
+    author: "rtm",
     method: "get",
     description: "Télécharger des vidéos YouTube en MP4 (choix qualité)",
-    path: "/ytmp4dl?url=&quality=",
+    path: "/ytmp4dl?url=&format=",
     category: "downloader"
   },
-
-  onStart: async function ({ req, res }) {
+  onStart: async function({ req, res }) {
     const youtubeUrl = req.query.url;
-    const quality = req.query.quality || "360"; // par défaut 360p
+    const format = req.query.format || "1080"; // Valeur par défaut
 
     if (!youtubeUrl) {
-      return res.status(400).json({ error: "URL YouTube requise." });
+      return res.status(400).json({ error: "URL YouTube requise" });
     }
 
     const headers = {
       accept: "*/*",
-      "accept-language": "fr-FR,fr;q=0.9",
-      "user-agent": "Mozilla/5.0",
-      referer: "https://ytmate.lc",
+      "accept-language": "en-US,en;q=0.9",
+      Referer: "https://v4.mp3paw.link/",
     };
 
     try {
-      const infoUrl = `https://ytmate.lc/api/ajaxSearch/index?query=${encodeURIComponent(youtubeUrl)}&vt=mp4`;
-      const info = await axios.get(infoUrl, { headers });
+      const apiKey = "30de256ad09118bd6b60a13de631ae2cea6e5f9d";
+      const downloadUrl = `https://p.oceansaver.in/ajax/download.php?copyright=0&format=mp4&url=${encodeURIComponent(youtubeUrl)}&q=${format}&api=${apiKey}`;
 
-      const result = info.data;
+      const { data: downloadData } = await axios.get(downloadUrl, { headers });
 
-      if (!result || !result.links || !result.links.mp4) {
-        return res.status(404).json({ error: "Lien de téléchargement non trouvé." });
+      if (downloadData.success && downloadData.id) {
+        const progressUrl = `https://p.oceansaver.in/ajax/progress.php?id=${downloadData.id}`;
+        const { data: progressData } = await axios.get(progressUrl, { headers });
+
+        if (progressData.progress === 1000 && progressData.url) {
+          return res.json({
+            operator: "AjiroDesu",
+            success: 1,
+            progress: 1000,
+            download_url: progressData.url,
+            text: "Finished",
+            message: "If you want your application to use our API contact us: sp_golubev@protonmail.com or visit https://video-download-api.com/"
+          });
+        } else {
+          return res.status(400).json({ error: "Conversion non terminée" });
+        }
+      } else {
+        return res.status(400).json({ error: "Erreur de téléchargement" });
       }
-
-      // Récupération du lien avec la qualité demandée
-      const qualityKeys = Object.keys(result.links.mp4);
-      const chosenQuality = qualityKeys.includes(quality) ? quality : qualityKeys[0];
-      const downloadLink = result.links.mp4[chosenQuality].url;
-
-      res.json({
-        videoTitle: result.title,
-        quality: chosenQuality,
-        download: downloadLink
-      });
-
     } catch (error) {
-      console.error("Erreur dans ytmp4dl:", error.message);
-      res.status(500).json({ error: "Erreur serveur", details: error.message });
+      console.error("Erreur dans le downloader :", error.message);
+      return res.status(500).json({ error: "Erreur interne", message: error.message });
     }
   }
 };
