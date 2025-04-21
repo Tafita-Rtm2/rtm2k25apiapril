@@ -3,87 +3,60 @@ const axios = require('axios');
 const meta = {
   name: "gpt4o-pro",
   version: "1.0.0",
-  description: "Endpoint GPT‑4o Pro avec raisonement, recherche web et date temps réel",
-  author: "Votre Nom",
+  description: "Endpoint GPT-4o Pro avec raisonnement, recherche web et date en temps réel",
+  author: "rtm",
   method: "get",
   category: "ai",
-  path: "/deepseek?query="
+  path: "/gpt4o-pro?query="
 };
 
-async function onStart({ req, res }) {
-  // 1. Validation du paramètre
+async function onStart({ res, req }) {
   const { query } = req.query;
+
   if (!query) {
-    return res.status(400).json({ status: false, error: 'Le paramètre `query` est requis.' });
+    return res.status(400).json({ status: false, error: "Paramètre 'query' requis." });
   }
 
-  // 2. Date/heure courante ISO
-  const currentDate = new Date().toISOString();
-
-  // 3. Recherche web (stub) – à remplacer par votre implémentation
-  let searchResults = [];
-  try {
-    searchResults = await webSearch(query);  // Retourne un tableau d’objets { title, snippet, url }
-  } catch (e) {
-    console.error('Erreur recherche web :', e);
-  }
-
-  // 4. Construction des messages pour GPT‑4o Pro
-  const systemMsg1 = {
-    role: 'system',
-    content: `Vous êtes GPT‑4o Pro, un assistant à raisonnement avancé et accès web. Date/heure actuelle : ${currentDate}.`
-  };
-  const systemMsg2 = {
-    role: 'system',
-    content: 'Résultats de recherche :\n' +
-      searchResults.map((r, i) => `${i+1}. ${r.snippet} (${r.url})`).join('\n')
-  };
-  const userMsg = { role: 'user', content: query };
-
-  const messages = [ systemMsg1, systemMsg2, userMsg ];
-
-  // 5. Appel au modèle GPT‑4o Pro via votre endpoint Siliconflow
-  try {
-    const aiResp = await axios.post(
-      'https://gpt.tiptopuni.com/api/siliconflow/v1/chat/completions',
-      {
-        model: 'gpt-4o-pro',
-        messages,
-        temperature: 0.7
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-          // ajoutez ici vos headers si nécessaire
+  const config = {
+    method: 'post',
+    url: 'https://gpt.tiptopuni.com/api/siliconflow/v1/chat/completions',
+    timeout: 20000, // 20 sec timeout pour éviter les 504
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Origin': 'https://gpt.tiptopuni.com',
+      'Referer': 'https://gpt.tiptopuni.com/',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+    },
+    data: JSON.stringify({
+      model: 'Pro/gpt-4o', // modèle GPT-4o Pro
+      stream: false,
+      temperature: 0.8,
+      top_p: 0.9,
+      frequency_penalty: 0.4,
+      presence_penalty: 0.6,
+      messages: [
+        {
+          role: 'user',
+          content: query
         }
-      }
-    );
+      ]
+    })
+  };
 
-    const aiContent = aiResp.data.choices?.[0]?.message?.content;
-    if (!aiContent) {
-      return res.status(500).json({ status: false, error: 'Réponse IA introuvable.' });
+  try {
+    const response = await axios(config);
+    const aiResponse = response.data.choices?.[0]?.message?.content;
+
+    if (!aiResponse) {
+      return res.status(500).json({ status: false, error: "Réponse de l'IA introuvable." });
     }
 
-    // 6. Retour JSON
-    res.json({
-      response: aiContent,
-      searchUsed: searchResults
-    });
-
-  } catch (err) {
-    console.error('Erreur AI :', err.response?.data || err.message);
-    res.status(500).json({ status: false, error: 'Erreur lors de l’appel à l’IA.' });
+    res.json({ response: aiResponse });
+  } catch (error) {
+    console.error("Erreur GPT-4o Pro:", error.message);
+    return res.status(504).json({ status: false, error: "Erreur serveur distant. Réessaie plus tard." });
   }
-}
-
-// Fonction stub de recherche web : implémentez ici Bing, Google, ou autre
-async function webSearch(q) {
-  // Exemple de structure retournée :
-  // return [
-  //   { title: 'Titre 1', snippet: 'Extrait 1', url: 'https://...' },
-  //   { title: 'Titre 2', snippet: 'Extrait 2', url: 'https://...' },
-  // ];
-  return [];
 }
 
 module.exports = { meta, onStart };
