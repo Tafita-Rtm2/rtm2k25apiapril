@@ -1,25 +1,37 @@
 const { Hercai } = require('hercai');
 
-exports.config = {
-    name: 'gpt4',
-    author: 'Joshua Apostol',
-    description: 'chat with the Gpt4',
-    method: 'get',
-    category: 'ai',
-    link: ['/gpt4?query=hi']
+const meta = {
+  name: "gpt4",
+  version: "1.0.0",
+  description: "Chat avec GPT-4 via Hercai",
+  author: "Tafitaniaina",
+  method: "get",
+  category: "ai",
+  path: "/gpt4?query="
 };
 
-exports.initialize = async function ({ req, res }) {
-    try {
-        const query = req.query.query;
-        if (!query) {
-            return res.status(400).json({ error: "Add ?query=your_query_here" });
-        }
+async function onStart({ req, res }) {
+  const query = req.query.query;
+  if (!query) {
+    return res.status(400).json({ status: false, error: "Le paramètre ?query= est requis" });
+  }
 
-        const herc = new Hercai();
-        const response = await herc.question({ model: "v3-32k", content: query });
-        res.json({ response: response.reply });
-    } catch (error) {
-        res.status(500).json({ error: "Failed to interact with the Turbo model" });
+  try {
+    const herc = new Hercai();
+    const response = await herc.question({ model: "v3-32k", content: query });
+
+    if (!response || !response.reply) {
+      return res.status(500).json({ status: false, error: "Réponse vide de Hercai" });
     }
-};
+
+    res.json({
+      status: true,
+      response: response.reply
+    });
+  } catch (error) {
+    console.error("Erreur API Hercai:", error);
+    res.status(500).json({ status: false, error: "Erreur interne", message: error.message });
+  }
+}
+
+module.exports = { meta, onStart };
