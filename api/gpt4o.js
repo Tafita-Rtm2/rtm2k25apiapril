@@ -22,7 +22,7 @@ async function onStart({ res, req }) {
 
   // Optional: extract additional parameters from the query string, with default fallbacks.
   const stream = req.query.stream ? req.query.stream === 'true' : false;
-  const model = req.query.model || 'gpt-4o(OpenAI)';
+  const model = req.query.model || 'OpenAI/gpt-4o';
   const temperature = req.query.temperature ? parseFloat(req.query.temperature) : 0.8;
   const presence_penalty = req.query.presence_penalty ? parseFloat(req.query.presence_penalty) : 0.6;
   const frequency_penalty = req.query.frequency_penalty ? parseFloat(req.query.frequency_penalty) : 0.4;
