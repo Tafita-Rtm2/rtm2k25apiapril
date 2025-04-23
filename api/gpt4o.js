@@ -7,7 +7,7 @@ const meta = {
   author: "Jr Busaco and AjiroDesu",
   method: "get",
   category: "ai",
-  path: "/gpt4-o?query="
+  path: "/gpt-4o?query="
 };
 
 async function onStart({ res, req }) {
