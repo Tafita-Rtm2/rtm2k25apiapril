@@ -1,10 +1,10 @@
 const axios = require('axios');
 
 const meta = {
-  name: "gpt4o",
-  version: "0.0.1",
-  description: "Un endpoint utilisant GPT-4o via l’API SiliconFlow",
-  author: "Jr Busaco and AjiroDesu (modifié par ChatGPT)",
+  name: "gpt4o-openai",
+  version: "1.0.0",
+  description: "Appelle GPT-4o via SiliconFlow API sur gpt.tiptopuni.com",
+  author: "ton-nom-ici",
   method: "get",
   category: "ai",
   path: "/gpt4o?query="
@@ -13,50 +13,40 @@ const meta = {
 async function onStart({ res, req }) {
   const { query } = req.query;
   if (!query) {
-    return res.status(400).json({ status: false, error: 'query is required' });
+    return res.status(400).json({ status: false, error: 'query est requis' });
   }
 
-  const messages = [{ role: 'user', content: query }];
-  const stream = req.query.stream === 'true';
-  const model = 'OpenAI/gpt-4o'; // modèle GPT-4o ici
-  const temperature = req.query.temperature ? parseFloat(req.query.temperature) : 0.8;
-  const presence_penalty = req.query.presence_penalty ? parseFloat(req.query.presence_penalty) : 0.6;
-  const frequency_penalty = req.query.frequency_penalty ? parseFloat(req.query.frequency_penalty) : 0.4;
-  const top_p = req.query.top_p ? parseFloat(req.query.top_p) : 0.9;
-
-  const payload = JSON.stringify({
-    messages,
-    stream,
-    model,
-    temperature,
-    presence_penalty,
-    frequency_penalty,
-    top_p,
-  });
-
-  const config = {
-    method: 'post',
-    url: 'https://gpt.tiptopuni.com/api/siliconflow/v1/chat/completions',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Origin': 'https://gpt.tiptopuni.com',
-      'Referer': 'https://gpt.tiptopuni.com/',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-    },
-    data: payload
+  const payload = {
+    messages: [{ role: 'user', content: query }],
+    stream: false,
+    model: "OpenAI/gpt-4o",  // très important : exact d'après ta capture
+    temperature: 0.7,
+    presence_penalty: 0.6,
+    frequency_penalty: 0.4,
+    top_p: 0.9
   };
 
   try {
-    const response = await axios(config);
+    const response = await axios.post("https://gpt.tiptopuni.com/api/siliconflow/v1/chat/completions", payload, {
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Origin": "https://gpt.tiptopuni.com",
+        "Referer": "https://gpt.tiptopuni.com/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0 Safari/537.36"
+      }
+    });
+
     const aiResponse = response.data.choices?.[0]?.message?.content;
     if (!aiResponse) {
-      return res.status(500).json({ status: false, error: 'AI response not found in API response.' });
+      return res.status(500).json({ status: false, error: 'Réponse vide de GPT-4o.' });
     }
+
     res.json({ response: aiResponse });
+
   } catch (error) {
-    console.error("Error during GPT-4o call:", error.message);
-    res.status(500).json({ status: false, error: 'An error occurred while fetching GPT-4o completions.' });
+    console.error("Erreur GPT-4o:", error.response?.data || error.message);
+    res.status(500).json({ status: false, error: 'Erreur lors de l’appel GPT-4o.' });
   }
 }
 
