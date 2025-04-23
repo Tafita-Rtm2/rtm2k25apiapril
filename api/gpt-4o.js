@@ -1,69 +1,40 @@
 const axios = require('axios');
 
 const meta = {
-  name: "gpt-4o",
+  name: "gpt4router",
   version: "0.0.1",
-  description: "An API endpoint that fetches chat completions from siliconflow based on a required query parameter",
-  author: "Jr Busaco and AjiroDesu",
+  description: "Un endpoint qui appelle GPT-4 via ai-router-production",
+  author: "Jr Busaco et AjiroDesu",
   method: "get",
   category: "ai",
-  path: "/gpt-4o?query="
+  path: "/gpt4?prompt="
 };
 
 async function onStart({ res, req }) {
-  // Extract the required 'query' parameter from the query string
-  const { query } = req.query;
-  if (!query) {
-    return res.status(400).json({ status: false, error: 'query is required' });
+  const { prompt } = req.query;
+
+  if (!prompt) {
+    return res.status(400).json({ status: false, error: 'prompt is required' });
   }
 
-  // Use the 'query' parameter as the content for the user message.
-  const messages = [{ role: 'user', content: query }];
-
-  // Optional: extract additional parameters from the query string, with default fallbacks.
-  const stream = req.query.stream ? req.query.stream === 'true' : false;
-  const model = req.query.model || 'OpenAI/gpt-4o';
-  const temperature = req.query.temperature ? parseFloat(req.query.temperature) : 0.8;
-  const presence_penalty = req.query.presence_penalty ? parseFloat(req.query.presence_penalty) : 0.6;
-  const frequency_penalty = req.query.frequency_penalty ? parseFloat(req.query.frequency_penalty) : 0.4;
-  const top_p = req.query.top_p ? parseFloat(req.query.top_p) : 0.9;
-
-  // Construct the payload for the siliconflow API call
-  const payload = JSON.stringify({
-    messages,
-    stream,
-    model,
-    temperature,
-    presence_penalty,
-    frequency_penalty,
-    top_p,
-  });
-
-  const config = {
-    method: 'post',
-    url: 'https://gpt.tiptopuni.com/api/siliconflow/v1/chat/completions',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Origin': 'https://gpt.tiptopuni.com',
-      'Referer': 'https://gpt.tiptopuni.com/',
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-    },
-    data: payload
-  };
+  // Model verrouillé sur GPT-4
+  const model = "openai/gpt-4";
+  const uid = "0"; // UID par défaut ou fixe si besoin
+  const url = `https://ai-router-production.up.railway.app/openrouter?prompt=${encodeURIComponent(prompt)}&uid=${uid}&model=${model}`;
 
   try {
-    const response = await axios(config);
-    // Extract the actual AI response only from the returned data.
-    // This assumes the API returns a structure similar to OpenAI's Chat Completion API.
-    const aiResponse = response.data.choices?.[0]?.message?.content;
-    if (!aiResponse) {
-      return res.status(500).json({ status: false, error: 'AI response not found in API response.' });
-    }
-    res.json({ response: aiResponse });
+    const response = await axios.get(url, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0'
+      }
+    });
+
+    const result = response.data?.response || response.data;
+    res.json({ response: result });
   } catch (error) {
-    console.error("Error during API call:", error);
-    res.status(500).json({ status: false, error: 'An error occurred while fetching completions.' });
+    console.error("Erreur GPT-4 router:", error.response?.data || error.message);
+    res.status(500).json({ status: false, error: 'Erreur lors de la requête vers GPT-4.' });
   }
 }
 
