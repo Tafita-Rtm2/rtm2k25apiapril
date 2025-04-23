@@ -19,7 +19,7 @@ async function onStart({ res, req }) {
   const messages = [{ role: 'user', content: query }];
 
   const payload = {
-    model: "OpenAI/gpt-4o",  // vérifié depuis ta capture
+    model: "gpt-4o",  // vérifié depuis ta capture
     messages: messages,
     temperature: 0.7,
     top_p: 0.9,
