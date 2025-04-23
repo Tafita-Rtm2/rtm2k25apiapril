@@ -1,12 +1,12 @@
 const axios = require('axios');
 
 const meta = {
-  name: "gpt4router",
+  name: "chatgpt-4o-latest",
   version: "0.0.1",
   description: "Un endpoint qui appelle GPT-4 via ai-router-production",
   author: "Jr Busaco et AjiroDesu",
   method: "get",
-  category: "ai",
+  category: "Chatgpt",
   path: "/chatgpt-4o-latest?prompt="
 };
 
