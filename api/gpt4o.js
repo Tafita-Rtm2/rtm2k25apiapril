@@ -1,13 +1,13 @@
 const axios = require('axios');
 
 const meta = {
-  name: "chatgpt",
+  name: "gpt4o",
   version: "0.0.1",
-  description: "API endpoint using siliconflow with ChatGPT models",
-  author: "Jr Busaco and AjiroDesu",
+  description: "Un endpoint utilisant GPT-4o via l’API SiliconFlow",
+  author: "Jr Busaco and AjiroDesu (modifié par ChatGPT)",
   method: "get",
   category: "ai",
-  path: "/chatgpt?query="
+  path: "/gpt4o?query="
 };
 
 async function onStart({ res, req }) {
@@ -17,9 +17,8 @@ async function onStart({ res, req }) {
   }
 
   const messages = [{ role: 'user', content: query }];
-
-  const stream = req.query.stream ? req.query.stream === 'true' : false;
-  const model = req.query.model || 'OpenAi/gpt-4o'; // ICI on utilise le modèle ChatGPT
+  const stream = req.query.stream === 'true';
+  const model = 'OpenAI/gpt-4o'; // modèle GPT-4o ici
   const temperature = req.query.temperature ? parseFloat(req.query.temperature) : 0.8;
   const presence_penalty = req.query.presence_penalty ? parseFloat(req.query.presence_penalty) : 0.6;
   const frequency_penalty = req.query.frequency_penalty ? parseFloat(req.query.frequency_penalty) : 0.4;
@@ -56,8 +55,8 @@ async function onStart({ res, req }) {
     }
     res.json({ response: aiResponse });
   } catch (error) {
-    console.error("Error during API call:", error);
-    res.status(500).json({ status: false, error: 'An error occurred while fetching completions.' });
+    console.error("Error during GPT-4o call:", error.message);
+    res.status(500).json({ status: false, error: 'An error occurred while fetching GPT-4o completions.' });
   }
 }
 
