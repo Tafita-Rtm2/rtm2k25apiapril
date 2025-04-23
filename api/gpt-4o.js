@@ -7,7 +7,7 @@ const meta = {
   author: "Jr Busaco et AjiroDesu",
   method: "get",
   category: "ai",
-  path: "/gpt4?prompt="
+  path: "/chatgpt-4o-latest?prompt="
 };
 
 async function onStart({ res, req }) {
@@ -18,7 +18,7 @@ async function onStart({ res, req }) {
   }
 
   // Model verrouillé sur GPT-4
-  const model = "openai/gpt-4";
+  const model = "openai/chatgpt-4o-latest";
   const uid = "0"; // UID par défaut ou fixe si besoin
   const url = `https://ai-router-production.up.railway.app/openrouter?prompt=${encodeURIComponent(prompt)}&uid=${uid}&model=${model}`;
 
