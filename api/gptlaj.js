@@ -1,13 +1,13 @@
 const axios = require('axios');
 
 const meta = {
-  name: "chatgpt-o4-mini",
+  name: "gpt-4o-2024-08-06",
   version: "0.0.1",
   description: "Un endpoint qui appelle GPT-4 via ai-router-production",
   author: "rtm tafitaniaina",
   method: "get",
   category: "Chatgpt",
-  path: "/o4-mini?prompt="
+  path: "/rtm?prompt="
 };
 
 async function onStart({ res, req }) {
@@ -18,7 +18,7 @@ async function onStart({ res, req }) {
   }
 
   // Model verrouillé sur GPT-4
-  const model = "opena/o4-mini";
+  const model = "openai/gpt-4o-2024-08-06";
   const uid = "0"; // UID par défaut ou fixe si besoin
   const url = `https://ai-router-production.up.railway.app/openrouter?prompt=${encodeURIComponent(prompt)}&uid=${uid}&model=${model}`;
 
