@@ -6,7 +6,7 @@ const meta = {
   description: "GPT-4o avec texte, vision et génération d'image",
   author: "rtm tafitaniaina",
   method: "get",
-  category: "Chatgpt",
+  category: "gemini",
   path: "/rtmg?prompt=&mode=&img="
 };
 
