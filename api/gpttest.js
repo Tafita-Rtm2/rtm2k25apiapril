@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const meta = {
-  name: "gpt-4o-2024-08-06",
+  name: "gpt-4o-2024-8-06",
   version: "0.0.2",
   description: "GPT-4o avec texte, vision et génération d'image",
   author: "rtm tafitaniaina",
