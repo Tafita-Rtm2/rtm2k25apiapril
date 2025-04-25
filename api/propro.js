@@ -1,45 +1,57 @@
-const axios = require('axios');
+const puppeteer = require('puppeteer');
 
 const meta = {
-  name: "gpt-4o-tiptopuni",
+  name: "gpt4o-capture",
   version: "0.0.1",
-  description: "GPT-4o via gpt.tiptopuni.com en rappel",
+  description: "Capture réponse GPT-4o depuis site web avec Puppeteer",
   author: "rtm tafitaniaina",
   method: "get",
-  category: "gpt4o",
-  path: "/gpt4o?prompt="
+  category: "gpt",
+  path: "/api/gpt4o?prompt="
 };
 
-async function onStart({ res, req }) {
+async function onStart({ req, res }) {
   const { prompt } = req.query;
-
   if (!prompt) {
     return res.status(400).json({ status: false, error: 'prompt is required' });
   }
 
+  let browser;
   try {
-    // Ici on envoie la question au site gpt.tiptopuni.com
-    const response = await axios.post('https://gpt.tiptopuni.com/api/siliconflow/v1/chat/completions', {
-      messages: [
-        { role: "user", content: prompt }
-      ],
-      model: "gpt-4o",
-      temperature: 0.7
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0'
-      }
+    browser = await puppeteer.launch({
+      headless: "new",
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
-    // Maintenant on récupère la réponse de GPT-4o
-    const reply = response.data?.choices?.[0]?.message?.content || "Pas de réponse.";
+    const page = await browser.newPage();
+    await page.goto('https://gpt.tiptopuni.com/#/chat', { waitUntil: 'networkidle2' });
 
-    res.json({ response: reply });
+    await page.waitForSelector('textarea');
+
+    await page.type('textarea', prompt);
+
+    await page.click('button:has-text("Envoyer")');
+
+    await page.waitForTimeout(4000); // Attendre la réponse
+
+    const reply = await page.evaluate(() => {
+      const botMessages = Array.from(document.querySelectorAll('.chat-message.bot'));
+      if (botMessages.length === 0) return null;
+      return botMessages[botMessages.length - 1].innerText;
+    });
+
+    await browser.close();
+
+    if (!reply) {
+      return res.status(500).json({ status: false, error: 'No reply received.' });
+    }
+
+    res.json({ status: true, response: reply });
 
   } catch (error) {
-    console.error("Erreur GPT-4o TipTopUni:", error.response?.data || error.message);
-    res.status(500).json({ status: false, error: 'Erreur lors de la requête vers GPT-4o TipTopUni.' });
+    if (browser) await browser.close();
+    console.error("Erreur GPT-4o Puppeteer:", error.message);
+    res.status(500).json({ status: false, error: error.message });
   }
 }
 
