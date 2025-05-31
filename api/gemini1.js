@@ -1,50 +1,53 @@
-const axios = require('axios');
+const puppeteer = require('puppeteer');
+const express = require('express');
+const app = express();
 
 const meta = {
-  name: "gemini-pro-vision",
-  version: "0.0.2",
-  description: "GPT-4o avec texte, vision et génération d'image",
-  author: "rtm tafitaniaina",
+  name: "aidoc-gpt",
+  version: "1.0.0",
+  description: "Fetches response from aidocmaker.com/chat using ChatGPT-4o interface",
+  author: "Adapted by ChatGPT",
   method: "get",
-  category: "gemini",
-  path: "/rtmg?prompt=&mode=&img="
+  category: "ai",
+  path: "/aidocgpt?query="
 };
 
-async function onStart({ res, req }) {
-  const { prompt, mode, img } = req.query;
-
-  if (!prompt) {
-    return res.status(400).json({ status: false, error: 'prompt is required' });
-  }
-
-  const model = "google/gemini-pro-vision";
-  const uid = "0";
-  let url = `https://ai-router-production.up.railway.app/openrouter?prompt=${encodeURIComponent(prompt)}&uid=${uid}&model=${model}`;
-
-  if (mode === 'vision') {
-    if (!img) return res.status(400).json({ status: false, error: 'Image URL is required for vision mode' });
-    url += `&img=${encodeURIComponent(img)}`;
-  }
-
-  if (mode === 'generate') {
-    // on change de modèle pour la génération d’image (DALL·E 3)
-    const dalleModel = "openai/dall-e-3";
-    url = `https://ai-router-production.up.railway.app/openrouter?prompt=${encodeURIComponent(prompt)}&uid=${uid}&model=${dalleModel}`;
-  }
+async function onStart({ req, res }) {
+  const { query } = req.query;
+  if (!query) return res.status(400).json({ status: false, error: 'query is required' });
 
   try {
-    const response = await axios.get(url, {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0'
-      }
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
 
-    const result = response.data?.response || response.data;
-    res.json({ response: result });
-  } catch (error) {
-    console.error("Erreur GPT-4 router:", error.response?.data || error.message);
-    res.status(500).json({ status: false, error: 'Erreur lors de la requête vers GPT-4o.' });
+    const page = await browser.newPage();
+    await page.goto('https://www.aidocmaker.com/chat', { waitUntil: 'networkidle2' });
+
+    // Tape le message dans le champ texte
+    await page.waitForSelector('textarea');
+    await page.type('textarea', query);
+    await page.keyboard.press('Enter');
+
+    // Attendre que la réponse arrive (zone de chat qui se remplit)
+    await page.waitForFunction(() => {
+      const elems = document.querySelectorAll('.prose > p');
+      return elems.length > 0 && elems[elems.length - 1].innerText.trim().length > 10;
+    }, { timeout: 20000 });
+
+    // Récupère la dernière réponse
+    const response = await page.evaluate(() => {
+      const elems = document.querySelectorAll('.prose > p');
+      return elems[elems.length - 1].innerText.trim();
+    });
+
+    await browser.close();
+    return res.json({ status: true, response });
+
+  } catch (err) {
+    console.error('Error:', err);
+    return res.status(500).json({ status: false, error: 'Failed to get response from aidocmaker.com' });
   }
 }
 
